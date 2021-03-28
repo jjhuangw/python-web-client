@@ -8,7 +8,7 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, ImageSendMessage
+    MessageEvent, TextMessage, TextSendMessage, ImageSendMessage, FlexSendMessage
 )
 
 from googletrans import Translator
@@ -79,13 +79,98 @@ def handle_message(event):
             line_bot_api.reply_message(event.reply_token, message)
         if event.message.text[:2].upper() == "@K":
             input_word = event.message.text.replace(" ", "")  # 合併字串取消空白
-            stock_name = input_word[2:6]  # 2330
-            during_days = input_word[6:]  # 150
+            stock_name = input_word[2:6]
+            during_days = input_word[6:]
             if not during_days.strip():
                 during_days = 30
-            content = plot_stcok_k_chart(stock_name, during_days)
-            message = ImageSendMessage(original_content_url=content, preview_image_url=content)
-            line_bot_api.reply_message(event.reply_token, message)
+            image_url = plot_stcok_k_chart(stock_name, during_days)
+
+            flex_message = FlexSendMessage(
+                alt_text=stock_name,  # alt_text
+                contents={
+  "type": "bubble",
+  "hero": {
+    "type": "image",
+    "url": image_url,
+    "size": "full",
+    "aspectRatio": "20:13",
+    "aspectMode": "cover",
+    "action": {
+      "type": "uri",
+      "uri": image_url
+    }
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "spacing": "md",
+    "contents": [
+      {
+        "type": "text",
+        "text": stock_name,
+        "wrap": True,
+        "weight": "bold",
+        "gravity": "center",
+        "size": "xl"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "margin": "lg",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Period",
+                "color": "#aaaaaa",
+                "size": "sm",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "text": str(during_days),
+                "wrap": True,
+                "size": "sm",
+                "color": "#666666",
+                "flex": 4
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "spacing": "sm",
+            "contents": [
+              {
+                "type": "text",
+                "text": "Price",
+                "color": "#aaaaaa",
+                "size": "sm",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "text": "7 Floor, No.3",
+                "wrap": True,
+                "color": "#666666",
+                "size": "sm",
+                "flex": 4
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+            )
+            # message = ImageSendMessage(original_content_url=content, preview_image_url=content)
+            line_bot_api.reply_message(event.reply_token, flex_message)
 
         else:
             line_bot_api.reply_message(event.reply_token,
