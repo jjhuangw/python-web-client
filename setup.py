@@ -58,7 +58,7 @@ setup(
                       'line-bot-sdk==1.16.0',
                       'gunicorn==20.0.4',
                       'apscheduler==3.6.3',
-                      'googletrans==3.0.0',
+                      'google_trans_new',
                       'mplfinance',
                       'pandas_datareader==0.9.0rc1',
                       'pyimgur'],

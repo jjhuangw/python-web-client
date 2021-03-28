@@ -11,7 +11,7 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage, ImageSendMessage, FlexSendMessage
 )
 
-from googletrans import Translator
+from google_trans_new import google_translator
 
 import traceback
 import mplfinance as mpf
@@ -54,122 +54,40 @@ def translate_text(text, dest='en'):
     :param text: 要翻譯的字串，接受UTF-8編碼。
     :param dest: 要翻譯的目標語言，參閱googletrans.LANGCODES語言列表。
     """
-    translator = Translator()
-    result = translator.translate(text, dest).text
-    return result
+    translator = google_translator()
+    return translator.translate(text, dest)
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     try:
-
+        singal = event.message.text[:2].upper()
         if event.source.user_id == 'U54feccad85957869d5863daaa7b7fcda':
             return 'OK'
-        if event.message.text[:2] == "@E":
+        if singal == "@E":
             content = translate_text(event.message.text[2:], "en")
             message = TextSendMessage(text=content)
             line_bot_api.reply_message(event.reply_token, message)
-        if event.message.text[:2] == "@J":
+        if singal == "@J":
             content = translate_text(event.message.text[2:], "ja")
             message = TextSendMessage(text=content)
             line_bot_api.reply_message(event.reply_token, message)
-        if event.message.text[:2] == "@C":
-            content = translate_text(event.message.text[2:], "zh-tw")
+        if singal == "@C":
+            print(event.message.text[2:])
+            content = translate_text(event.message.text[2:].strip(), "zh-tw")
             message = TextSendMessage(text=content)
             line_bot_api.reply_message(event.reply_token, message)
-        if event.message.text[:2].upper() == "@K":
+        if singal == "@S":
             input_word = event.message.text.replace(" ", "")  # 合併字串取消空白
             stock_name = input_word[2:6]
             during_days = input_word[6:]
             if not during_days.strip():
                 during_days = 30
             image_url = plot_stcok_k_chart(stock_name, during_days)
-
             flex_message = FlexSendMessage(
                 alt_text=stock_name,  # alt_text
-                contents={
-  "type": "bubble",
-  "hero": {
-    "type": "image",
-    "url": image_url,
-    "size": "full",
-    "aspectRatio": "20:13",
-    "aspectMode": "cover",
-    "action": {
-      "type": "uri",
-      "uri": image_url
-    }
-  },
-  "body": {
-    "type": "box",
-    "layout": "vertical",
-    "spacing": "md",
-    "contents": [
-      {
-        "type": "text",
-        "text": stock_name,
-        "wrap": True,
-        "weight": "bold",
-        "gravity": "center",
-        "size": "xl"
-      },
-      {
-        "type": "box",
-        "layout": "vertical",
-        "margin": "lg",
-        "spacing": "sm",
-        "contents": [
-          {
-            "type": "box",
-            "layout": "baseline",
-            "spacing": "sm",
-            "contents": [
-              {
-                "type": "text",
-                "text": "Period",
-                "color": "#aaaaaa",
-                "size": "sm",
-                "flex": 1
-              },
-              {
-                "type": "text",
-                "text": str(during_days),
-                "wrap": True,
-                "size": "sm",
-                "color": "#666666",
-                "flex": 4
-              }
-            ]
-          },
-          {
-            "type": "box",
-            "layout": "baseline",
-            "spacing": "sm",
-            "contents": [
-              {
-                "type": "text",
-                "text": "Price",
-                "color": "#aaaaaa",
-                "size": "sm",
-                "flex": 1
-              },
-              {
-                "type": "text",
-                "text": "7 Floor, No.3",
-                "wrap": True,
-                "color": "#666666",
-                "size": "sm",
-                "flex": 4
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-}
+                contents=line_flex_message(image_url, stock_name, during_days)
             )
-            # message = ImageSendMessage(original_content_url=content, preview_image_url=content)
             line_bot_api.reply_message(event.reply_token, flex_message)
 
         else:
@@ -178,10 +96,95 @@ def handle_message(event):
     except Exception as err:
         traceback.print_exc()
 
+
 def get_daily_price():
     df = web.DataReader('0050.tw', 'yahoo', '2021-03-01')
     df.tail(10)
     print(df)
+
+
+def line_flex_message(image_url, stock_name, during_days):
+    return {
+        "type": "bubble",
+        "hero": {
+            "type": "image",
+            "url": image_url,
+            "size": "full",
+            "aspectRatio": "20:13",
+            "aspectMode": "cover",
+            "action": {
+                "type": "uri",
+                "uri": image_url
+            }
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "md",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": stock_name,
+                    "wrap": True,
+                    "weight": "bold",
+                    "gravity": "center",
+                    "size": "xl"
+                },
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "lg",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": "Period",
+                                    "color": "#aaaaaa",
+                                    "size": "sm",
+                                    "flex": 1
+                                },
+                                {
+                                    "type": "text",
+                                    "text": str(during_days),
+                                    "wrap": True,
+                                    "size": "sm",
+                                    "color": "#666666",
+                                    "flex": 4
+                                }
+                            ]
+                        },
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": "Price",
+                                    "color": "#aaaaaa",
+                                    "size": "sm",
+                                    "flex": 1
+                                },
+                                {
+                                    "type": "text",
+                                    "text": "7 Floor, No.3",
+                                    "wrap": True,
+                                    "color": "#666666",
+                                    "size": "sm",
+                                    "flex": 4
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
 
 
 def plot_stcok_k_chart(stock="0050", during_days=150, client_id=IMGUR_CLIENT_ID):
@@ -199,6 +202,7 @@ def plot_stcok_k_chart(stock="0050", during_days=150, client_id=IMGUR_CLIENT_ID)
     im = pyimgur.Imgur(client_id)
     uploaded_image = im.upload_image(PATH, title=stock + " candlestick chart")
     return uploaded_image.link
+
 
 if __name__ == "__main__":
     app.run(debug=True)
