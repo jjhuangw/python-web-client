@@ -1,0 +1,11 @@
+setuptools
+config
+urllib3==1.25
+Flask==1.1.2
+line-bot-sdk==1.16.0
+gunicorn==20.0.4
+apscheduler==3.6.3
+googletrans==3.0.0
+mplfinance
+pandas_datareader==0.9.0rc1
+pyimgur

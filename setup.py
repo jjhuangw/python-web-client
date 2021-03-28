@@ -4,6 +4,7 @@
 """
 from setuptools import setup, find_packages
 
+
 def fix_setuptools():
     """Work around bugs in setuptools.                                                                                                                                                        
 
@@ -20,7 +21,8 @@ def fix_setuptools():
     except ImportError:
         pass
 
-# Fix bugs in setuptools.                                                                                                                                                                     
+
+# Fix bugs in setuptools.
 fix_setuptools()
 
 classifiers = [
@@ -40,18 +42,25 @@ classifiers = [
 ]
 
 setup(
-    name                = 'web-client',
-    version             = '0.0.1',
-    description         = 'restful service client',
-    long_description    = open('README.md').read().strip(),
-    author              = 'chien chang huang',
-    author_email        = '',
-    url                 = '',
-    license             = 'BSD',
-    packages            = find_packages(),
-    install_requires    = ['setuptools',
-                           'configparser',
-                           'requests',
-                           'selenium'],
-    classifiers         = classifiers
+    name='web-client',
+    version='0.0.1',
+    description='restful service client',
+    long_description=open('README.md').read().strip(),
+    author='chien chang huang',
+    author_email='',
+    url='',
+    license='BSD',
+    packages=find_packages(),
+    install_requires=['setuptools',
+                      'config',
+                      'urllib3==1.25',
+                      'Flask==1.1.2',
+                      'line-bot-sdk==1.16.0',
+                      'gunicorn==20.0.4',
+                      'apscheduler==3.6.3',
+                      'googletrans==3.0.0',
+                      'mplfinance',
+                      'pandas_datareader==0.9.0rc1',
+                      'pyimgur'],
+    classifiers=classifiers
 )
