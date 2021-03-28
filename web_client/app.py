@@ -13,16 +13,17 @@ from linebot.models import (
 
 from googletrans import Translator
 
-from build.lib.web_client import get_data
-
-from web_client import get_data
 import traceback
-from datetime import date
+import mplfinance as mpf
+import pandas_datareader.data as web
+import datetime
+import pyimgur
 
 app = Flask(__name__)
 
 LINE_CHANNEL_ACCESS_TOKEN = "bwu6x1K4VRcNmHE/yH3lPnPqNXstXYnoI1cpFlDpFGf5Ttm/nr2YjPa9zAdvJ6JbqdJAsqXJtYsb74IPSdUsVfiy9RXwmpccIN7XFs6OIGxlKhCtPPfyAPc4OWuZR/ta1RLtFi4cyNC7lhvObIOLzgdB04t89/1O/w1cDnyilFU="
 LINE_CHANNEL_SECRET = "37baa14638d1c6f127710af279df4438"
+IMGUR_CLIENT_ID = "80248fa08d1ca9b"
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
@@ -82,7 +83,7 @@ def handle_message(event):
             during_days = input_word[6:]  # 150
             if not during_days.strip():
                 during_days = 30
-            content = get_data.plot_stcok_k_chart(stock_name, during_days)
+            content = plot_stcok_k_chart(stock_name, during_days)
             message = ImageSendMessage(original_content_url=content, preview_image_url=content)
             line_bot_api.reply_message(event.reply_token, message)
 
@@ -91,6 +92,28 @@ def handle_message(event):
                                        TextSendMessage(text=event.message.text))
     except Exception as err:
         traceback.print_exc()
+
+def get_daily_price():
+    df = web.DataReader('0050.tw', 'yahoo', '2021-03-01')
+    df.tail(10)
+    print(df)
+
+
+def plot_stcok_k_chart(stock="0050", during_days=150, client_id=IMGUR_CLIENT_ID):
+    """
+  進行個股K線繪製，回傳至於雲端圖床的連結。將顯示包含5MA、20MA及量價關係。
+  :stock :個股代碼(字串)，預設0050。
+  :during_days :蒐集幾日前的資料，預設50日前(包含假日)，但呈現的K線會扣掉。
+  """
+    stock = str(stock) + ".tw"
+    start_date = (datetime.datetime.now() - datetime.timedelta(int(during_days))).strftime("%Y-%m-%d")  # 計算蒐集起始日
+    df = web.DataReader(stock, 'yahoo', start_date)
+    mpf.plot(df.tail(int(during_days)), type='candle', mav=(5, 20), volume=True, ylabel=stock.upper() + ' Price',
+             savefig='testsave.png')
+    PATH = "testsave.png"
+    im = pyimgur.Imgur(client_id)
+    uploaded_image = im.upload_image(PATH, title=stock + " candlestick chart")
+    return uploaded_image.link
 
 if __name__ == "__main__":
     app.run(debug=True)
