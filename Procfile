@@ -1,2 +1,2 @@
-web: gunicorn app_core:app –preload
+web: gunicorn --chdir web_client app:app –preload
 
